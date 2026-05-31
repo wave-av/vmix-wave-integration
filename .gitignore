@@ -1,0 +1,16 @@
+node_modules/
+companion/dist/
+companion/*.tsbuildinfo
+.DS_Store
+.idea/
+.vscode/
+*.log
+*.env
+*.env.*
+!*.env.example
+*.cookie.txt
+
+# vendor-license deny-list (defense-in-depth — vMix is closed-source)
+vMix.exe
+vMix_setup*.exe
+*.vmix.proprietary

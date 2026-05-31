@@ -1,0 +1,17 @@
+# foundation-gate.yml — inlined checks (public repo can't consume the private
+# wave-foundation reusable workflow). _checks.yml mirrors wave-foundation's
+# checks.yml@v1 (pinned via .foundation-version).
+
+name: foundation-gate
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    uses: ./.github/workflows/_checks.yml
