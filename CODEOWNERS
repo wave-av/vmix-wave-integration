@@ -1,0 +1,7 @@
+# vmix-wave-integration — code owners (review required on every PR).
+# Layer 0 (Operator) of the WAVE Protocol Plane.
+
+* @wave-av/streaming-team
+
+/companion/  @wave-av/streaming-team
+/.github/    @wave-av/streaming-team

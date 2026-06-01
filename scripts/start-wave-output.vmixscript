@@ -1,0 +1,17 @@
+' vmix-wave-integration / start-wave-output.vmixscript
+'
+' Triggers wave-desktop's encoder to start, using its current "selected
+' destination stream key" (held in wave-desktop's own state). Designed to
+' be bound to a vMix shortcut so the operator can hit one key to go live.
+'
+' Requires the companion sidecar (companion/server.ts) running at :7724.
+' If you change the port, update WAVE_COMPANION_BASE below to match.
+
+Dim WAVE_COMPANION_BASE
+WAVE_COMPANION_BASE = "http://127.0.0.1:7724"
+
+Dim payload
+payload = "{""source"":""vmix-program""}"
+
+' vMix's Title Script HTTP helper performs a fire-and-forget POST.
+HTTP(WAVE_COMPANION_BASE & "/v1/wave/encoder/start", "POST", "application/json", payload)

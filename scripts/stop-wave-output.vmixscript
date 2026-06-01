@@ -1,0 +1,9 @@
+' vmix-wave-integration / stop-wave-output.vmixscript
+'
+' Counterpart to start-wave-output.vmixscript. Tells wave-desktop to stop
+' the currently-active encoder.
+
+Dim WAVE_COMPANION_BASE
+WAVE_COMPANION_BASE = "http://127.0.0.1:7724"
+
+HTTP(WAVE_COMPANION_BASE & "/v1/wave/encoder/stop", "POST", "application/json", "{}")
