@@ -64,9 +64,24 @@ MIT-licensed (see `LICENSE`). vMix itself is a third-party closed-source product
 | Wave | Surface | Status |
 |---|---|---|
 | W1 | This scaffold | shipped |
-| W2 | Real `companion/` server: vMix XML poll → wave-desktop IPC | next |
+| W2 | Real `companion/` server: vMix XML poll + curated function allowlist + title-update | **shipped** |
 | W3 | Reverse path: wave-desktop encoder status → vMix Title field bindings | pending |
 | W4 | Multi-source mapping (vMix Inputs ↔ WAVE stream-keys) | pending |
+
+## Companion HTTP API (W2)
+
+All endpoints are 127.0.0.1-only and wrapped in Helmet's strict CSP.
+
+| Method | Path | Body | Behavior |
+|---|---|---|---|
+| GET | `/health` | — | liveness + bound vMix/wave-desktop hosts |
+| GET | `/v1/vmix/status` | — | structured snapshot: `version`, `active`, `preview`, `recording`, `streaming`, `inputs[]` |
+| POST | `/v1/vmix/function` | `{ name, params? }` | invokes a vMix Function — name must be in the curated allowlist (see `companion/src/vmix.ts`) |
+| POST | `/v1/vmix/title-update` | `{ input, field, value }` | shorthand for SetText — `value` capped at 2048 chars |
+
+Function allowlist: `Cut`, `Fade`, `Stinger1`/`2`, `Wipe`, `StartStreaming`, `StopStreaming`, `StartRecording`, `StopRecording`, `PreviewInput`, `ActiveInput`, `OverlayInput1On`/`Off`, `OverlayInput2On`/`Off`, `SetText`.
+
+Non-listed functions return 400. vMix exposes hundreds of functions including destructive ones (e.g. `Quit`, `ScriptStop`); the allowlist is intentionally narrow.
 
 Full plan: `~/claude-hub/.claude/plans/wave-on-prem-layer/plan.md` (W5 line).
 
