@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1",
+  "repo": "wave-av/vmix-wave-integration",
+  "version": "0.2.0",
+  "lifecycle": "alpha",
+  "planeLayer": 0,
+  "foundationPin": "v1",
+  "maintainers": [{ "team": "operator" }],
+  "exposes": {
+    "renderSurfaces": [
+      { "kind": "vmix-titles", "id": "wave-now-live" }
+    ],
+    "apis": [
+      { "protocol": "http", "endpoint": "http://127.0.0.1:7724/health", "auth": "none" },
+      { "protocol": "http", "endpoint": "http://127.0.0.1:7724/v1/vmix/status", "auth": "none" },
+      { "protocol": "http", "endpoint": "http://127.0.0.1:7724/v1/vmix/function", "auth": "none" },
+      { "protocol": "http", "endpoint": "http://127.0.0.1:7724/v1/vmix/title-update", "auth": "none" }
+    ]
+  },
+  "consumes": {
+    "waveProducts": [
+      { "repo": "wave-av/wave-desktop", "endpoint": "ipc://wave:encoder:start" }
+    ],
+    "thirdParty": [
+      { "service": "vmix-http-api", "licenseGated": true }
+    ],
+    "foundationFrameworks": ["frameworks/protocol-plane", "frameworks/platform-registry"]
+  },
+  "tags": ["operator", "public", "vmix", "windows", "loopback-only", "build-on-wave"]
+}
