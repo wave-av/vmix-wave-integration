@@ -9,3 +9,4 @@ All notable changes documented here. Format: [Keep a Changelog](https://keepacha
 - Companion sidecar: Express skeleton on :7724 bridging vMix HTTP API ↔ wave-desktop IPC
 - Foundation chassis: CODEOWNERS, SECRETS.md, foundation-gate workflow, .foundation-version
 - threat-model.md enumerating localhost trust boundaries
+- governance-enforce workflow: vendored A_BLOCK gate (diff-scoped secrets / hardcoded-path enforcement via @wave-av/governance)
