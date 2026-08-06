@@ -25,6 +25,11 @@ set -uo pipefail
 FILE="${1:-}"
 [[ -n "$FILE" && -f "$FILE" ]] || { echo "::error::body-policy: usage: body-policy.sh <file>"; exit 2; }
 command -v rg >/dev/null 2>&1 || { echo "::error::body-policy: ripgrep (rg) required"; exit 2; }
+# Every rule uses -P (PCRE2) for lookarounds and inline flags, and not every rg
+# build ships it. Without this probe such a build still fails CLOSED — every rule
+# exits 2 — but with a baffling per-rule "ripgrep failed" error. Probe once up
+# front and name the actual problem instead.
+rg --pcre2-version >/dev/null 2>&1 || { echo "::error::body-policy: this ripgrep build lacks PCRE2 (-P) support, which every rule here needs — install a PCRE2-enabled rg"; exit 2; }
 
 VIOLATIONS=0
 
