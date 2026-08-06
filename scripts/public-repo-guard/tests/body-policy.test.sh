@@ -59,6 +59,10 @@ expect 1 'AWS access key id' \
   "The failing job had ${AKID_FIXTURE} configured."
 expect 1 'internal tailscale IP' \
   'It resolves to 100.71.4.19 from inside the fleet.'
+# Credential FORMATS are -hard: naming the control on the same line must not
+# exempt a real key — the annotation would otherwise re-publish it.
+expect 1 'credential format still blocks on a line naming the control' \
+  "public-repo-guard should have caught this earlier: ${AKID_FIXTURE} was pasted here."
 
 # --- must PASS (precision — these keep the gate deployable) -------------------
 expect 0 'bare private-repo cross-reference' \
@@ -67,6 +71,10 @@ expect 0 'two private repos, no operational detail' \
   'Both wave-gateway and wave-transports will need a follow-up for this.'
 expect 0 'credential NAME with no private repo nearby' \
   'The handler now reads SOME_API_TOKEN from the environment instead of a literal.'
+# Regression: a top-level (?i) once bled into OPS_DETAIL, so lowercase words like
+# api_key counted as credential names and this ordinary sentence blocked.
+expect 0 'lowercase credential-ish word near a private repo' \
+  'Companion to wave-transports#260; it changes the api_key handling.'
 expect 0 'public runner path is not an operator path' \
   'CI checks out to /home/runner/work/repo/repo before the scan runs.'  # enforce-ignore (fixture)
 expect 0 'talking about the control' \

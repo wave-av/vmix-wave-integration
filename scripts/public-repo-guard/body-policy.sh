@@ -34,8 +34,15 @@ VIOLATIONS=0
 # from the client-side gate's allowlist, which was built for exactly this.
 ABOUT_THE_CONTROL='(public-repo-guard|body-policy|content-policy|public-github-write-gate|\bNDA\s+(gate|guard|policy|denylist|sweep|scan|hook)\b|\bno\s+NDA\b|responsib\w*\s+disclos|SECURITY\.md)'
 
-# check <BLOCK|WARN> <name> <regex> <why>
+# check [-hard] <BLOCK|WARN> <name> <regex> <why>
+#   -hard skips the ABOUT-THE-CONTROL allowlist. Credential FORMATS are never
+#   legitimate in prose, so a line that both names the control and carries a real
+#   key must still block — otherwise "public-repo-guard missed sk_live_…" would
+#   re-publish the key it complains about. `guard:allow` still applies: it is the
+#   deliberate, visible-in-the-diff escape hatch for every rule.
 check() {
+  local hard=0
+  if [[ "$1" == "-hard" ]]; then hard=1; shift; fi
   local sev="$1" name="$2" re="$3" why="$4"
   [[ -z "$re" ]] && { echo "::error::body-policy: internal bug — empty regex for rule '$name'"; exit 2; }
   # rg exit: 0=match, 1=no match, >=2=real error → FAIL CLOSED. A gate that passes
@@ -50,9 +57,10 @@ check() {
   # silently errors out locally while working on GNU/CI — the gate would then
   # disagree with itself depending on where it ran. rg is already required above.
   local matches
-  matches="$(printf '%s' "$raw" \
-    | rg -vN -- 'guard:allow[[:space:]]+[^[:space:]]' \
-    | rg -vNiP -- "$ABOUT_THE_CONTROL" || true)"
+  matches="$(printf '%s' "$raw" | rg -vN -- 'guard:allow[[:space:]]+[^[:space:]]' || true)"
+  if (( ! hard )); then
+    matches="$(printf '%s' "$matches" | rg -vNiP -- "$ABOUT_THE_CONTROL" || true)"
+  fi
   [[ -z "$matches" ]] && return 0
   local count; count="$(printf '%s\n' "$matches" | grep -c '')"
   # Print the LINE NUMBER only — never the matched text. This annotation is itself
@@ -69,13 +77,15 @@ check() {
 }
 
 # --- Credential formats — never legitimate in prose --------------------------
-check BLOCK stripe-live-key  '(sk|rk)_live_[A-Za-z0-9]{16,}'                 'Live Stripe secret/restricted key'
-check BLOCK stripe-account   'acct_[A-Za-z0-9]{16,}'                         'Live Stripe account ID — financial infra, never publish'
-check BLOCK anthropic-key    'sk-ant-(api|admin)[0-9]{2}-[A-Za-z0-9_-]{20,}' 'Real Anthropic API/admin key'
-check BLOCK github-pat       'github_pat_[A-Za-z0-9_]{30,}'                  'GitHub fine-grained PAT'
-check BLOCK supabase-pat     'sbp_[a-f0-9]{40}'                              'Supabase personal access token'
-check BLOCK aws-akid         'AKIA[0-9A-Z]{16}'                              'AWS access key ID'
-check BLOCK private-key      '-----BEGIN [A-Z ]*PRIVATE KEY-----'            'Embedded private key material'
+# -hard: no prose context makes a live credential publishable, so the
+# ABOUT-THE-CONTROL allowlist does not apply here.
+check -hard BLOCK stripe-live-key  '(sk|rk)_live_[A-Za-z0-9]{16,}'                 'Live Stripe secret/restricted key'
+check -hard BLOCK stripe-account   'acct_[A-Za-z0-9]{16,}'                         'Live Stripe account ID — financial infra, never publish'
+check -hard BLOCK anthropic-key    'sk-ant-(api|admin)[0-9]{2}-[A-Za-z0-9_-]{20,}' 'Real Anthropic API/admin key'
+check -hard BLOCK github-pat       'github_pat_[A-Za-z0-9_]{30,}'                  'GitHub fine-grained PAT'
+check -hard BLOCK supabase-pat     'sbp_[a-f0-9]{40}'                              'Supabase personal access token'
+check -hard BLOCK aws-akid         'AKIA[0-9A-Z]{16}'                              'AWS access key ID'
+check -hard BLOCK private-key      '-----BEGIN [A-Z ]*PRIVATE KEY-----'            'Embedded private key material'
 
 # --- Infrastructure identifiers ----------------------------------------------
 # shellcheck disable=SC2016  # $CLOUDFLARE_ACCOUNT_ID is literal guidance text
@@ -125,9 +135,13 @@ if [[ -n "${GUARD_PRIVATE_REPOS:-}" ]]; then
     _ALT="${_ALT:+$_ALT|}${_esc}"
   done
   if [[ -n "$_ALT" ]]; then
-    # Both orders: name-then-detail and detail-then-name.
+    # Both orders: name-then-detail and detail-then-name. The (?i) is scoped to
+    # the repo-name group ONLY — a top-level (?i) would bleed across the whole
+    # pattern (including past the |), making OPS_DETAIL's deliberately
+    # SCREAMING_CASE credential-name match hit everyday lowercase words like
+    # api_key, which turns legitimate cross-repo prose into false blocks.
     check BLOCK private-repo-ops \
-      "(?i)\\b(?:${_ALT})\\b[^\\n]{0,140}?\\b${OPS_DETAIL}|${OPS_DETAIL}[^\\n]{0,140}?\\b(?:${_ALT})\\b" \
+      "(?:(?i)\\b(?:${_ALT})\\b)[^\\n]{0,140}?\\b${OPS_DETAIL}|${OPS_DETAIL}[^\\n]{0,140}?(?:(?i)\\b(?:${_ALT})\\b)" \
       'A private WAVE repo named alongside internal operational detail (credential name, secret binding, or secret count) — the wiring topology is not public'
   fi
 fi
