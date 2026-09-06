@@ -125,12 +125,61 @@ jobs:
       cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      # SECURITY — the scanner must come from the BASE branch, never from the revision
+      # under review. `actions/checkout` defaults to the PR's merge ref on a
+      # pull_request event, which would let a PR edit body-policy.sh in the very
+      # commit this job is judging and neuter the gate that is judging it. Pinning to
+      # base.sha means the code that judges a PR is always code that already merged.
+      #
+      # `issues` / `issue_comment` events carry no pull_request object, so the
+      # expression falls through to github.sha — the default branch tip, the same
+      # trusted source. An empty ref would silently mean "default ref", so the
+      # fallback is written out rather than left implicit.
+      #
+      # base.sha is a SHA computed by GitHub, not attacker-supplied text — unlike
+      # head_ref / head.label, it is safe to interpolate into `ref:`.
+      - name: Check out the gate from the base branch (trusted copy)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
           # Only the gate's own scripts are needed — no reason to pay for the whole
           # tree on every comment.
           sparse-checkout: scripts/public-repo-guard
           sparse-checkout-cone-mode: false
+          path: gate
+          # Nothing here pushes, and the body text arrives via the event payload, not
+          # via Git — so no step needs an authenticated remote. (zizmor: artipacked)
+          persist-credentials: false
+
+      # BOOTSTRAP ONLY. On the pull request that first introduces body-policy.sh the
+      # base branch does not have it yet, so the trusted checkout above comes back
+      # without a scanner and the job would fail on the very change that adds it.
+      #
+      # This does not reopen the hole the base checkout closes: which path to take is
+      # decided from the BASE checkout — trusted state a pull request cannot alter.
+      # A hostile PR deleting or rewriting the scanner on its own head changes
+      # nothing here, because only base is consulted. Once this PR merges the
+      # condition is permanently false.
+      - name: Decide which scanner copy runs
+        id: scanner
+        run: |
+          set -euo pipefail
+          if [ -f gate/scripts/public-repo-guard/body-policy.sh ]; then
+            echo "source=base" >> "$GITHUB_OUTPUT"
+            echo "scanner: base branch (trusted)"
+          else
+            echo "::warning title=public-repo-guard (body-guard)::Base branch carries no scripts/public-repo-guard/body-policy.sh yet, so this run uses the copy from the pull request. This path exists only for the change that introduces the gate; once it is merged the scanner always comes from base."
+            echo "source=pr" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out this PR's copy of the gate (bootstrap only)
+        if: steps.scanner.outputs.source == 'pr'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          sparse-checkout: scripts/public-repo-guard
+          sparse-checkout-cone-mode: false
+          path: gate
+          persist-credentials: false
 
       - name: Install ripgrep
         run: command -v rg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep)
@@ -160,4 +209,4 @@ jobs:
       - name: body policy (PR / issue / comment text)
         env:
           GUARD_PRIVATE_REPOS: ${{ vars.GUARD_PRIVATE_REPOS }}
-        run: bash scripts/public-repo-guard/body-policy.sh "$RUNNER_TEMP/bodyscan/body.txt"
+        run: bash gate/scripts/public-repo-guard/body-policy.sh "$RUNNER_TEMP/bodyscan/body.txt"
