@@ -22,3 +22,16 @@ only.
 | Default vMix host `http://localhost:8088` | vMix's documented bind |
 | Companion port `7724` | Documented in README |
 | wave-desktop local-IPC port `7723` | Documented in wave-desktop README |
+
+
+## Machine surface
+
+```yaml secrets-contract
+version: "0.1"
+secrets: []
+deny_paths:
+  - ".dev.vars"
+  - ".dev.vars.*"
+  - ".env"
+  - ".env.*"
+```
