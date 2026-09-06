@@ -162,11 +162,20 @@ jobs:
       # condition is permanently false.
       - name: Decide which scanner copy runs
         id: scanner
+        env:
+          # A fork PR is the untrusted case, and it must never reach the bootstrap
+          # path — only a branch inside this repo, from someone who already has write
+          # access, can supply the scanner. Read from the payload into env rather than
+          # interpolated into the script body.
+          HEAD_IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
         run: |
           set -euo pipefail
           if [ -f gate/scripts/public-repo-guard/body-policy.sh ]; then
             echo "source=base" >> "$GITHUB_OUTPUT"
             echo "scanner: base branch (trusted)"
+          elif [ "${HEAD_IS_FORK:-false}" = "true" ]; then
+            echo "::error title=public-repo-guard (body-guard)::Base branch carries no scanner and this pull request comes from a fork — refusing to run a scanner supplied by the change under review. Land the gate from a branch in this repository first."
+            exit 1
           else
             echo "::warning title=public-repo-guard (body-guard)::Base branch carries no scripts/public-repo-guard/body-policy.sh yet, so this run uses the copy from the pull request. This path exists only for the change that introduces the gate; once it is merged the scanner always comes from base."
             echo "source=pr" >> "$GITHUB_OUTPUT"
