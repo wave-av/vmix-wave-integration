@@ -2,7 +2,7 @@
 
 **WAVE integration for vMix** — drop these files into your vMix install and your switcher gets first-class WAVE controls: send program to WAVE, automated "Now Live" lower-thirds, and bidirectional sync between vMix's HTTP API and `wave-desktop`.
 
-Layer-0 (Operator) of the [WAVE Protocol Plane][plane].
+Layer-0 (Operator) of the WAVE Protocol Plane.
 
 ## What's in the box
 
@@ -81,7 +81,7 @@ All endpoints are 127.0.0.1-only and wrapped in Helmet's strict CSP.
 
 Function allowlist: `Cut`, `Fade`, `Stinger1`/`2`, `Wipe`, `StartStreaming`, `StopStreaming`, `StartRecording`, `StopRecording`, `PreviewInput`, `ActiveInput`, `OverlayInput1On`/`Off`, `OverlayInput2On`/`Off`, `SetText`.
 
-Non-listed functions return 400. vMix exposes hundreds of functions including destructive ones (e.g. `Quit`, `ScriptStop`); the allowlist is intentionally narrow.
+Non-listed functions return 400. vMix exposes hundreds of functions including destructive ones (e.g. `Quit`, `ScriptStop`); the allowlist is intentionally narrow. <!-- # guard:allow descriptive prose about third-party API behavior -->
 
 Full plan: `~/claude-hub/.claude/plans/wave-on-prem-layer/plan.md` (W5 line).
 
@@ -91,4 +91,3 @@ Security: open a private advisory at
 <https://github.com/wave-av/vmix-wave-integration/security/advisories/new>.
 Other bugs: GitHub Issues.
 
-[plane]: https://github.com/wave-av/wave-foundation/blob/master/frameworks/protocol-plane/README.md
