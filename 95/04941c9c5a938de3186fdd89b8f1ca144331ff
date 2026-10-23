@@ -1,0 +1,16 @@
+.buildkite/tests/guard-content-policy-fork.bats
+  h_af5ac1a9798224 149,176-177,179-180
+README.md
+  h_af5ac1a9798224 98-105
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "9504941c9c5a938de3186fdd89b8f1ca144331ff",
+  "prompts": {},
+  "humans": {
+    "h_af5ac1a9798224": {
+      "author": "Jake Fineman <jakefineman@gmail.com>"
+    }
+  }
+}
