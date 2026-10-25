@@ -1,0 +1,16 @@
+.buildkite/provenance/bin/emit-provenance.mjs
+  h_af5ac1a9798224 153-156
+.buildkite/wave-ci.json
+  h_af5ac1a9798224 2,40-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "50efc7fb2cc510e9fc34ba02a0410f2cb4aa9641",
+  "prompts": {},
+  "humans": {
+    "h_af5ac1a9798224": {
+      "author": "Jake Fineman <jakefineman@gmail.com>"
+    }
+  }
+}
